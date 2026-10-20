@@ -19,7 +19,8 @@ import {
   X,
 } from 'lucide-react'
 
-const FORMSPREE_URL = 'https://formspree.io/f/TU_CODIGO_AQUI' // ← Reemplazá con tu URL de Formspree
+// Reemplazá con tu URL real de Formspree
+const FORMSPREE_URL = 'https://formspree.io/f/TU_CODIGO_AQUI'
 
 const faqs = [
   ['¿Necesito instalar algo?', 'No. Accedés a tu espacio de trabajo desde cualquier navegador, sin instalaciones locales.'],
@@ -50,12 +51,25 @@ function useInView() {
   const [isInView, setIsInView] = useState(false)
 
   useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setIsInView(true)
-    }, { threshold: 0.12 })
+    const el = ref.current
+    if (!el) return
 
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsInView(true)
+      },
+      { threshold: 0.05, rootMargin: '0px 0px -40px 0px' }
+    )
+
+    observer.observe(el)
+
+    // Fallback: si por algún motivo no dispara, mostrar igual
+    const safety = setTimeout(() => setIsInView(true), 1800)
+
+    return () => {
+      observer.disconnect()
+      clearTimeout(safety)
+    }
   }, [])
 
   return { ref, isInView }
@@ -80,7 +94,7 @@ export default function IncloudIALanding() {
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20)
-      const sections = navItems.map(item => document.getElementById(item.id))
+      const sections = navItems.map((item) => document.getElementById(item.id))
       const scrollPos = window.scrollY + 120
       for (let i = sections.length - 1; i >= 0; i--) {
         const section = sections[i]
@@ -91,6 +105,7 @@ export default function IncloudIALanding() {
       }
     }
     window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
@@ -153,7 +168,7 @@ export default function IncloudIALanding() {
           <button className="header-cta" onClick={() => scrollTo('contacto')}>
             Hablemos <ArrowRight size={16} />
           </button>
-          <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)}>
+          <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menú">
             {menuOpen ? <X /> : <Menu />}
           </button>
         </div>
@@ -247,13 +262,17 @@ export default function IncloudIALanding() {
             </div>
             <div className="clients-grid">
               <article className="client-card">
-                <div className="client-logo"><img src="/cacipra.png" alt="CACIPRA" /></div>
+                <div className="client-logo">
+                  <img src="/cacipra.png" alt="CACIPRA" />
+                </div>
                 <h3>CACIPRA</h3>
                 <p>Infraestructura virtual con 20 equipos para cursos, con acceso vía web para alumnos y por consola para el docente. Discos en la nube.</p>
                 <p>Servidores web y databases de funcionamiento crítico. Datacenter con servicio 24x7, redundancia y backups constantes.</p>
               </article>
               <article className="client-card">
-                <div className="client-logo"><img src="/hb-comex.png" alt="HB Comex" /></div>
+                <div className="client-logo">
+                  <img src="/hb-comex.png" alt="HB Comex" />
+                </div>
                 <h3>HB Comex</h3>
                 <p>Manejo de infraestructura física de red on site, con gateway Mikrotik, balanceo de líneas y soporte remoto. Mantenimiento de equipos informáticos.</p>
               </article>
@@ -358,26 +377,26 @@ export default function IncloudIALanding() {
                   <div className="form-row">
                     <label>
                       Nombre
-                      <input name="nombre" required />
+                      <input name="nombre" required placeholder="Tu nombre" />
                     </label>
                     <label>
                       Email
-                      <input name="email" type="email" required />
+                      <input name="email" type="email" required placeholder="tu@empresa.com" />
                     </label>
                   </div>
                   <div className="form-row">
                     <label>
                       Empresa
-                      <input name="empresa" />
+                      <input name="empresa" placeholder="Nombre de la empresa" />
                     </label>
                     <label>
                       Asunto
-                      <input name="asunto" />
+                      <input name="asunto" placeholder="Motivo de la consulta" />
                     </label>
                   </div>
                   <label>
                     Mensaje
-                    <textarea name="mensaje" required rows={4} />
+                    <textarea name="mensaje" required rows={4} placeholder="Contanos qué necesitás..." />
                   </label>
 
                   <input type="hidden" name="_subject" value="Nueva consulta desde IncloudIA" />
@@ -402,7 +421,14 @@ export default function IncloudIALanding() {
         </section>
       </main>
 
-      <a href="https://wa.me/5491164157261" className="whatsapp-float" aria-label="WhatsApp" title="Escribinos por WhatsApp">
+      <a
+        href="https://wa.me/5491164157261"
+        className="whatsapp-float"
+        aria-label="WhatsApp"
+        title="Escribinos por WhatsApp"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <MessageCircle />
       </a>
 
