@@ -62,7 +62,6 @@ function useInView() {
     )
 
     observer.observe(el)
-
     const safety = setTimeout(() => setIsInView(true), 1800)
 
     return () => {
@@ -261,18 +260,24 @@ export default function IncloudIALanding() {
             </div>
             <div className="clients-grid">
               <article className="client-card">
-                <div className="client-logo">
-                  <img src="/cacipra.png" alt="CACIPRA" />
+                <div className="client-header">
+                  <img src="/cacipra.png" alt="CACIPRA" className="client-logo-img" />
+                  <div className="client-title">
+                    <h3>CACIPRA</h3>
+                    <span>Cámara de Comercio, Industria y Producción</span>
+                  </div>
                 </div>
-                <h3>CACIPRA</h3>
                 <p>Infraestructura virtual con 20 equipos para cursos, con acceso vía web para alumnos y por consola para el docente. Discos en la nube.</p>
                 <p>Servidores web y databases de funcionamiento crítico. Datacenter con servicio 24x7, redundancia y backups constantes.</p>
               </article>
               <article className="client-card">
-                <div className="client-logo">
-                  <img src="/hb-comex.png" alt="HB Comex" />
+                <div className="client-header">
+                  <img src="/hb-comex.png" alt="HB Comex" className="client-logo-img" />
+                  <div className="client-title">
+                    <h3>HB Comex</h3>
+                    <span>Logística Internacional</span>
+                  </div>
                 </div>
-                <h3>HB Comex</h3>
                 <p>Manejo de infraestructura física de red on site, con gateway Mikrotik, balanceo de líneas y soporte remoto. Mantenimiento de equipos informáticos.</p>
               </article>
             </div>
