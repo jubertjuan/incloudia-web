@@ -63,7 +63,6 @@ function useInView() {
 
     observer.observe(el)
 
-    // Fallback: si por algún motivo no dispara, mostrar igual
     const safety = setTimeout(() => setIsInView(true), 1800)
 
     return () => {
