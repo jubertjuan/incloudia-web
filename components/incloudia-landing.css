@@ -125,12 +125,12 @@ footer .brand-logo { height: 200px !important; }
   .site-header.scrolled .header-inner { height: 64px; }
 
   .brand-logo {
-    height: 48px !important;
+    height: 90px !important;
     max-width: 200px !important;
     width: auto !important;
   }
   .site-header.scrolled .brand-logo { height: 42px !important; }
-  footer .brand-logo { height: 56px !important; }
+  footer .brand-logo { height: 90px !important; }
 }
 
 .hero { padding: 100px 0 90px; position: relative; z-index: 1; }
