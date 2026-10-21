@@ -15,12 +15,15 @@ import {
   Mail,
   Menu,
   MessageCircle,
+  Play,
   Send,
   X,
 } from 'lucide-react'
 
 // Reemplazá con tu URL real de Formspree
 const FORMSPREE_URL = 'https://formspree.io/f/TU_CODIGO_AQUI'
+
+const YOUTUBE_VIDEO_ID = 'TmXRYsnWAwI'
 
 const faqs = [
   ['¿Necesito instalar algo?', 'No. Accedés a tu espacio de trabajo desde cualquier navegador, sin instalaciones locales.'],
@@ -81,6 +84,7 @@ export default function IncloudIALanding() {
   const [error, setError] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [activeSection, setActiveSection] = useState('')
+  const [videoOpen, setVideoOpen] = useState(false)
 
   const solRef = useInView()
   const clientsRef = useInView()
@@ -106,6 +110,19 @@ export default function IncloudIALanding() {
     onScroll()
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    if (!videoOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setVideoOpen(false)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [videoOpen])
 
   const scrollTo = (id: string) => {
     setMenuOpen(false)
@@ -269,6 +286,10 @@ export default function IncloudIALanding() {
                 </div>
                 <p>Infraestructura virtual con 20 equipos para cursos, con acceso vía web para alumnos y por consola para el docente. Discos en la nube.</p>
                 <p>Servidores web y databases de funcionamiento crítico. Datacenter con servicio 24x7, redundancia y backups constantes.</p>
+                <button type="button" className="video-btn" onClick={() => setVideoOpen(true)}>
+                  <Play size={16} />
+                  Ver demostración real (docente en vivo)
+                </button>
               </article>
               <article className="client-card">
                 <div className="client-header">
@@ -449,6 +470,35 @@ export default function IncloudIALanding() {
           <small>© 2026 IncloudIA</small>
         </div>
       </footer>
+
+      {videoOpen && (
+        <div
+          className="video-modal-overlay"
+          onClick={() => setVideoOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Video demostración CACIPRA"
+        >
+          <div className="video-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="video-modal-close"
+              onClick={() => setVideoOpen(false)}
+              aria-label="Cerrar video"
+            >
+              <X size={22} />
+            </button>
+            <div className="video-modal-frame">
+              <iframe
+                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
+                title="Casos Reales CACIPRA — Aulas Virtuales SIM"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
