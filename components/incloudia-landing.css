@@ -61,13 +61,15 @@ body {
 
 .brand { display: flex; align-items: center; text-decoration: none; }
 .brand-logo {
-  height: 200px;
-  width: auto;
+  height: 130px !important;
+  width: auto !important;
+  max-width: none !important;
+  max-height: none !important;
   display: block;
   transition: height 0.3s ease;
 }
-.site-header.scrolled .brand-logo { height: 90px; }
-footer .brand-logo { height: 200px; }
+.site-header.scrolled .brand-logo { height: 90px !important; }
+footer .brand-logo { height: 100px !important; }
 
 .nav-links { display: flex; gap: 28px; }
 .nav-links button {
@@ -99,18 +101,36 @@ footer .brand-logo { height: 200px; }
 
 @media (max-width: 820px) {
   .menu-button { display: flex; }
+
   .nav-links {
-    position: absolute; top: 120px; left: 0; right: 0;
-    background: #0a1a33; flex-direction: column; padding: 8px 0 16px;
-    display: none; border-bottom: 1px solid var(--border);
+    position: absolute;
+    top: 72px;
+    left: 0;
+    right: 0;
+    background: #0a1a33;
+    flex-direction: column;
+    padding: 8px 0 16px;
+    display: none;
+    border-bottom: 1px solid var(--border);
   }
   .nav-links.is-open { display: flex; }
-  .nav-links button { padding: 14px 24px; text-align: left; width: 100%; }
+  .nav-links button {
+    padding: 14px 24px;
+    text-align: left;
+    width: 100%;
+  }
   .header-cta { display: none; }
-  .brand-logo { height: 80px; }
-  .header-inner { height: 90px; }
-  .site-header.scrolled .header-inner { height: 76px; }
-  .site-header.scrolled .brand-logo { height: 64px; }
+
+  .header-inner { height: 72px; }
+  .site-header.scrolled .header-inner { height: 64px; }
+
+  .brand-logo {
+    height: 48px !important;
+    max-width: 200px !important;
+    width: auto !important;
+  }
+  .site-header.scrolled .brand-logo { height: 42px !important; }
+  footer .brand-logo { height: 56px !important; }
 }
 
 .hero { padding: 100px 0 90px; position: relative; z-index: 1; }
@@ -272,7 +292,6 @@ h1 {
 .solution-block .problem { color: #e8eef5; }
 .solution-block .benefit { color: #b8e4ff; }
 
-/* Partners / Clientes — sin recuadro blanco */
 .clients-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .client-card {
   background: var(--bg-card);
