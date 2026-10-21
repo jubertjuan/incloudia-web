@@ -4,8 +4,10 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'IncloudIA | La nube que piensa contigo',
-  description: 'Infraestructura cloud inteligente, segura y flexible para operaciones que quieren avanzar.',
-  generator: 'v0.app',
+  description:
+    'Infraestructura cloud inteligente, segura y flexible para operaciones que quieren avanzar.',
+  metadataBase: new URL('https://incloudia-web.vercel.app'),
+  generator: 'IncloudIA',
   icons: {
     icon: [
       {
@@ -22,6 +24,30 @@ export const metadata: Metadata = {
       },
     ],
     apple: '/apple-icon.png',
+  },
+  openGraph: {
+    title: 'IncloudIA | La nube que piensa contigo',
+    description:
+      'Infraestructura cloud inteligente, segura y flexible para operaciones que quieren avanzar.',
+    url: 'https://incloudia-web.vercel.app',
+    siteName: 'IncloudIA',
+    images: [
+      {
+        url: '/og-incloudia.png',
+        width: 1200,
+        height: 630,
+        alt: 'IncloudIA Consultora',
+      },
+    ],
+    locale: 'es_AR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'IncloudIA | La nube que piensa contigo',
+    description:
+      'Infraestructura cloud inteligente, segura y flexible para operaciones que quieren avanzar.',
+    images: ['/og-incloudia.png'],
   },
 }
 
