@@ -61,7 +61,7 @@ body {
 
 .brand { display: flex; align-items: center; text-decoration: none; }
 .brand-logo {
-  height: 130px !important;
+  height: 200px !important;
   width: auto !important;
   max-width: none !important;
   max-height: none !important;
@@ -69,7 +69,7 @@ body {
   transition: height 0.3s ease;
 }
 .site-header.scrolled .brand-logo { height: 90px !important; }
-footer .brand-logo { height: 100px !important; }
+footer .brand-logo { height: 200px !important; }
 
 .nav-links { display: flex; gap: 28px; }
 .nav-links button {
