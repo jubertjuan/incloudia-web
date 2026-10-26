@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 
 // Reemplazá con tu URL real de Formspree
-const FORMSPREE_URL = 'https://formspree.io/f/mbgggzzl'
+const FORMSPREE_URL = 'https://formspree.io/f/xwlllrze'
 
 const YOUTUBE_VIDEO_ID = 'TmXRYsnWAwI'
 
