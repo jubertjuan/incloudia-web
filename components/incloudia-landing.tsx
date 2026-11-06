@@ -18,6 +18,7 @@ import {
   Play,
   Send,
   X,
+  Box,
 } from 'lucide-react'
 
 // Reemplazá con tu URL real de Formspree
@@ -245,6 +246,15 @@ export default function IncloudIALanding() {
                   <p className="problem"><strong>Problema:</strong> Altos costos logísticos, límites de espacio físico y barreras tecnológicas en la capacitación.</p>
                   <p><strong>Solución:</strong> Plataformas e-learning de acceso web (24/7) sin instalaciones. Entornos seguros con repositorios centralizados para docentes y carpetas individuales para alumnos.</p>
                   <p className="benefit"><strong>Beneficio:</strong> Escalabilidad de matrícula sin invertir en metros cuadrados. Modelo híbrido y eliminación de gastos de traslados y alquileres.</p>
+                  <a
+                    href="/demos/sim-aduana.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="demo-link"
+                  >
+                    <Box size={16} />
+                    Ver infraestructura 3D (SIM Aduana)
+                  </a>
                 </div>
               </article>
               <article className="solution-block">
@@ -263,6 +273,15 @@ export default function IncloudIALanding() {
                   <p className="problem"><strong>Problema:</strong> Riesgo de pérdida, robo o daño de tokens físicos y demoras en despachos aduaneros.</p>
                   <p><strong>Solución:</strong> Sistema IoT que mantiene el token físico resguardado en la oficina. Los operadores acceden mediante túnel VPN encriptado desde cualquier lugar.</p>
                   <p className="benefit"><strong>Beneficio:</strong> Riesgo cero sobre el hardware crítico. Operaciones ágiles y cumplimiento normativo de aduana.</p>
+                  <a
+                    href="/demos/token-virtualizado.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="demo-link"
+                  >
+                    <Box size={16} />
+                    Ver token virtualizado 3D
+                  </a>
                 </div>
               </article>
             </div>

@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IncloudIA — Token Virtualizado</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0c1c30;
+      color: #f2f6fa;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+    }
+    #canvas-container { position: absolute; inset: 0; }
+    canvas { display: block; }
+
+    #ui {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 10;
+    }
+    #ui > * { pointer-events: auto; }
+
+    .panel {
+      background: rgba(12, 28, 48, 0.9);
+      border: 1px solid rgba(77, 184, 255, 0.28);
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      padding: 16px 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+
+    #header {
+      position: absolute; top: 18px; left: 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    #header .logo {
+      font-weight: 700; font-size: 1.15rem; letter-spacing: 0.5px; color: #4db8ff;
+    }
+    #header .logo span { color: #f2f6fa; font-weight: 500; }
+    #header .badge {
+      font-size: 0.7rem;
+      background: rgba(77,184,255,0.15);
+      color: #4db8ff;
+      padding: 3px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(77,184,255,0.3);
+    }
+
+    #status-panel {
+      position: absolute; top: 18px; right: 20px; width: 285px;
+    }
+    #status-panel h3 {
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+      color: #4db8ff; margin-bottom: 12px; opacity: 0.9;
+    }
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px; font-size: 0.85rem;
+    }
+    .stat-row .label { color: #a8bfd4; }
+    .stat-row .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .status-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; margin-right: 6px;
+    }
+    .status-dot.ok { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
+    #user-mgmt {
+      margin-top: 14px; padding-top: 12px;
+      border-top: 1px solid rgba(77,184,255,0.15);
+    }
+    #user-mgmt .mgmt-title {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px;
+      color: #7a9bb8; margin-bottom: 10px;
+    }
+    .mgmt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .mgmt-btn {
+      flex: 1;
+      background: rgba(77, 184, 255, 0.1);
+      border: 1px solid rgba(77, 184, 255, 0.35);
+      color: #4db8ff;
+      padding: 7px 10px; border-radius: 7px;
+      font-size: 0.78rem; font-weight: 500; cursor: pointer;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .mgmt-btn:hover:not(:disabled) {
+      background: rgba(77, 184, 255, 0.22); border-color: #4db8ff;
+    }
+    .mgmt-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .mgmt-btn.danger {
+      border-color: rgba(239, 68, 68, 0.4); color: #f87171;
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .mgmt-btn.danger:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.18); border-color: #f87171;
+    }
+    .user-count-display {
+      text-align: center; font-size: 0.8rem; color: #a8bfd4; margin-top: 4px;
+    }
+    .user-count-display strong { color: #4db8ff; font-size: 1rem; }
+
+    #controls {
+      position: absolute; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    }
+    .btn {
+      background: rgba(77, 184, 255, 0.12);
+      border: 1px solid rgba(77, 184, 255, 0.4);
+      color: #4db8ff;
+      padding: 9px 16px; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 500; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .btn:hover {
+      background: rgba(77, 184, 255, 0.25); border-color: #4db8ff;
+      transform: translateY(-1px);
+    }
+    .btn.active {
+      background: #4db8ff; color: #0c1c30; border-color: #4db8ff;
+    }
+
+    #info-panel {
+      position: absolute; bottom: 90px; left: 20px;
+      width: 330px; max-height: 250px; overflow-y: auto; display: none;
+    }
+    #info-panel.visible { display: block; }
+    #info-panel h4 { color: #4db8ff; font-size: 0.95rem; margin-bottom: 8px; }
+    #info-panel p { font-size: 0.82rem; line-height: 1.45; color: #c5d0de; }
+    #info-panel .close {
+      position: absolute; top: 10px; right: 12px;
+      background: none; border: none; color: #a0b4c8;
+      font-size: 1.1rem; cursor: pointer;
+    }
+
+    #legend {
+      position: absolute; bottom: 24px; right: 20px;
+      font-size: 0.72rem; color: #7a8fa3; text-align: right;
+    }
+    #legend div { margin-bottom: 3px; }
+
+    #loading {
+      position: absolute; inset: 0; background: #0c1c30;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 100; transition: opacity 0.5s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    #loading .spinner {
+      width: 42px; height: 42px;
+      border: 3px solid rgba(77,184,255,0.2);
+      border-top-color: #4db8ff; border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: #a8bfd4; font-size: 0.9rem; }
+
+    #tooltip {
+      position: absolute;
+      background: rgba(12,28,48,0.95);
+      border: 1px solid rgba(77,184,255,0.4);
+      padding: 6px 12px; border-radius: 6px;
+      font-size: 0.8rem; pointer-events: none; display: none; z-index: 20;
+      white-space: nowrap;
+    }
+
+    #flow-hint {
+      position: absolute; top: 70px; left: 20px;
+      font-size: 0.78rem; color: #8aadc8;
+      background: rgba(12,28,48,0.75);
+      padding: 8px 12px; border-radius: 8px;
+      border: 1px solid rgba(77,184,255,0.18);
+      max-width: 280px; line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Cargando Token Virtualizado IncloudIA…</p>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <div id="ui">
+    <div id="header">
+      <div class="logo">INCLOUD<span>IA</span></div>
+      <div class="badge">Token Virtualizado · Comercio Exterior</div>
+    </div>
+
+    <div id="flow-hint">
+      Flujo: Usuario (cualquier lugar) → VPN → Servidor Cloud → Raspberry Pi → Token físico
+    </div>
+
+    <div id="status-panel" class="panel">
+      <h3>Estado del Sistema</h3>
+      <div class="stat-row">
+        <span class="label"><span class="status-dot ok"></span>Servidor Cloud</span>
+        <span class="value" id="val-server">Online 24×7</span>
+      </div>
+      <div class="stat-row">
+        <span class="label"><span class="status-dot ok"></span>Raspberry Pi (IoT)</span>
+        <span class="value" id="val-rpi">Activo</span>
+      </div>
+      <div class="stat-row">
+        <span class="label"><span class="status-dot ok"></span>Tokens físicos</span>
+        <span class="value" id="val-tokens">2 conectados</span>
+      </div>
+      <div class="stat-row">
+        <span class="label"><span class="status-dot ok"></span>Usuarios VPN</span>
+        <span class="value" id="val-users">4 / 12</span>
+      </div>
+      <div class="stat-row" style="margin-top:12px; border-top:1px solid rgba(77,184,255,0.15); padding-top:10px;">
+        <span class="label">Firmas activas</span>
+        <span class="value" id="val-sign">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Encriptación</span>
+        <span class="value" style="font-size:0.75rem;">Noise + ChaCha20</span>
+      </div>
+
+      <div id="user-mgmt">
+        <div class="mgmt-title">Gestionar usuarios VPN</div>
+        <div class="mgmt-row">
+          <button class="mgmt-btn" id="btn-add-user" onclick="addUser()">
+            <span>+</span> Agregar
+          </button>
+          <button class="mgmt-btn danger" id="btn-remove-user" onclick="removeUser()">
+            <span>−</span> Quitar
+          </button>
+        </div>
+        <div class="user-count-display">
+          <strong id="user-count-num">4</strong> / 12 usuarios
+        </div>
+      </div>
+    </div>
+
+    <div id="info-panel" class="panel">
+      <button class="close" onclick="closeInfo()">×</button>
+      <h4 id="info-title">—</h4>
+      <p id="info-desc">—</p>
+    </div>
+
+    <div id="controls">
+      <button class="btn active" id="btn-orbit" onclick="setMode('orbit')">Orbitar</button>
+      <button class="btn active" id="btn-traffic" onclick="toggleTraffic()">Tráfico</button>
+      <button class="btn" id="btn-tour" onclick="startTour()">Tour</button>
+      <button class="btn" onclick="resetView()">Reset</button>
+    </div>
+
+    <div id="legend">
+      <div>🖱 Arrastrar → rotar</div>
+      <div>Scroll → zoom</div>
+      <div>Clic → detalle</div>
+    </div>
+  </div>
+
+  <div id="tooltip"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    let scene, camera, renderer, labelRenderer, controls;
+    let raycaster, mouse;
+    let clock = new THREE.Clock();
+    let trafficOn = true;
+    let tourActive = false;
+    let tourAngle = 0;
+
+    const MAX_USERS = 12;
+    let userCount = 4;
+    const userDevices = [];
+    const userLines = [];
+    let fixedLines = [];
+    const particles = [];
+    const objects = {};
+
+    const LOCATIONS = [
+      { name: 'Buenos Aires', country: 'AR', x: -14, z: -4 },
+      { name: 'Córdoba', country: 'AR', x: -16, z: 2 },
+      { name: 'Rosario', country: 'AR', x: -12, z: 5 },
+      { name: 'Mendoza', country: 'AR', x: -17, z: -1 },
+      { name: 'Montevideo', country: 'UY', x: -11, z: 8 },
+      { name: 'Santiago', country: 'CL', x: -18, z: 4 },
+      { name: 'Asunción', country: 'PY', x: -13, z: 10 },
+      { name: 'Madrid', country: 'ES', x: -20, z: -6 },
+      { name: 'Miami', country: 'US', x: -15, z: -9 },
+      { name: 'São Paulo', country: 'BR', x: -10, z: 12 },
+      { name: 'Lima', country: 'PE', x: -19, z: 7 },
+      { name: 'Bogotá', country: 'CO', x: -16, z: 14 }
+    ];
+
+    function init() {
+      const container = document.getElementById('canvas-container');
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0e2238);
+      scene.fog = new THREE.Fog(0x0e2238, 32, 80);
+
+      camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 200);
+      camera.position.set(14, 12, 18);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      labelRenderer = new CSS2DRenderer();
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.domElement.style.position = 'absolute';
+      labelRenderer.domElement.style.top = '0';
+      labelRenderer.domElement.style.pointerEvents = 'none';
+      container.appendChild(labelRenderer.domElement);
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.minDistance = 9;
+      controls.maxDistance = 55;
+      controls.maxPolarAngle = Math.PI * 0.48;
+      controls.target.set(0, 3, 1);
+
+      scene.add(new THREE.AmbientLight(0x6a8aaa, 0.55));
+
+      const main = new THREE.DirectionalLight(0xffffff, 1.05);
+      main.position.set(12, 24, 10);
+      main.castShadow = true;
+      main.shadow.mapSize.set(2048, 2048);
+      main.shadow.camera.near = 1;
+      main.shadow.camera.far = 60;
+      main.shadow.camera.left = -25;
+      main.shadow.camera.right = 25;
+      main.shadow.camera.top = 25;
+      main.shadow.camera.bottom = -25;
+      scene.add(main);
+
+      const blue = new THREE.PointLight(0x4db8ff, 1.4, 40);
+      blue.position.set(0, 8, 0);
+      scene.add(blue);
+
+      const fill = new THREE.PointLight(0xaaccff, 0.5, 30);
+      fill.position.set(-8, 6, 6);
+      scene.add(fill);
+
+      const ground = new THREE.Mesh(
+        new THREE.CircleGeometry(42, 64),
+        new THREE.MeshStandardMaterial({ color: 0x12263c, roughness: 0.85, metalness: 0.08 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      const grid = new THREE.GridHelper(42, 42, 0x1e3a55, 0x152a40);
+      grid.position.y = 0.01;
+      scene.add(grid);
+
+      const zone = new THREE.Mesh(
+        new THREE.RingGeometry(11, 11.3, 64),
+        new THREE.MeshBasicMaterial({ color: 0x4db8ff, transparent: true, opacity: 0.12, side: THREE.DoubleSide })
+      );
+      zone.rotation.x = -Math.PI / 2;
+      zone.position.y = 0.02;
+      scene.add(zone);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      buildServer();
+      buildRaspberry();
+      createInitialUsers();
+      createFixedConnections();
+      rebuildUserConnections();
+      createParticles();
+      createAmbientDust();
+      updateUserUI();
+
+      window.addEventListener('resize', onResize);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown);
+      renderer.domElement.addEventListener('pointermove', onPointerMove);
+
+      setTimeout(() => {
+        const loadElem = document.getElementById('loading');
+        if (loadElem) loadElem.classList.add('hidden');
+      }, 500);
+
+      animate();
+    }
+
+    function buildServer() {
+      const group = new THREE.Group();
+      group.name = 'server';
+      objects.server = group;
+
+      const plat = new THREE.Mesh(
+        new THREE.BoxGeometry(6.2, 0.22, 4),
+        new THREE.MeshStandardMaterial({ color: 0x1e3450, roughness: 0.65, metalness: 0.25 })
+      );
+      plat.position.y = 0.11;
+      plat.receiveShadow = true;
+      group.add(plat);
+
+      const chassis = new THREE.Mesh(
+        new THREE.BoxGeometry(4.0, 3.6, 2.3),
+        new THREE.MeshStandardMaterial({ color: 0x1e2e42, metalness: 0.5, roughness: 0.35 })
+      );
+      chassis.position.y = 2.0;
+      chassis.castShadow = true;
+      group.add(chassis);
+
+      group.userData.leds = [];
+      for (let i = 0; i < 9; i++) {
+        const slot = new THREE.Mesh(
+          new THREE.BoxGeometry(3.4, 0.2, 0.05),
+          new THREE.MeshStandardMaterial({ color: 0x0e1a28 })
+        );
+        slot.position.set(0, 0.5 + i * 0.32, 1.18);
+        group.add(slot);
+
+        const led = new THREE.Mesh(
+          new THREE.BoxGeometry(0.06, 0.06, 0.03),
+          new THREE.MeshBasicMaterial({ color: Math.random() > 0.2 ? 0x22c55e : 0x4db8ff })
+        );
+        led.position.set(1.5, 0.5 + i * 0.32, 1.22);
+        group.add(led);
+        group.userData.leds.push({ mesh: led, base: led.material.color.getHex(), phase: Math.random() * 6 });
+      }
+
+      for (let side of [-1, 1]) {
+        for (let i = 0; i < 5; i++) {
+          const vent = new THREE.Mesh(
+            new THREE.BoxGeometry(0.04, 0.35, 1.5),
+            new THREE.MeshStandardMaterial({ color: 0x0c1622 })
+          );
+          vent.position.set(side * 2.05, 0.85 + i * 0.5, 0);
+          group.add(vent);
+        }
+      }
+
+      addTechBadge(group, 'Servidor Cloud', 'IncloudIA · 24×7', 0, 4.4, 0);
+      group.position.set(0, 0, 0);
+      scene.add(group);
+
+      group.userData.type = 'server';
+      group.userData.title = 'Servidor Cloud IncloudIA';
+      group.userData.desc = 'Servidor principal en la nube. Encriptación Noise Protocol + Curve25519 + ChaCha20/Poly1305. Disponible 24×7. Termina las VPN de los usuarios y se conecta de forma segura a la Raspberry Pi donde residen los tokens físicos.';
+    }
+
+    function buildRaspberry() {
+      const group = new THREE.Group();
+      group.name = 'raspberry';
+      objects.raspberry = group;
+
+      // Pedestal metálico reflectivo
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(5.2, 0.18, 3.8),
+        new THREE.MeshStandardMaterial({ color: 0x112233, roughness: 0.3, metalness: 0.8 })
+      );
+      base.position.y = 0.09;
+      base.receiveShadow = true;
+      group.add(base);
+
+      // Luz de neón inferior flotante
+      const glowLight = new THREE.PointLight(0x00d2ff, 1.2, 6);
+      glowLight.position.set(0, 0.3, 0);
+      group.add(glowLight);
+
+      // Placa PCB Principal
+      const board = new THREE.Mesh(
+        new THREE.BoxGeometry(2.8, 0.12, 1.9),
+        new THREE.MeshStandardMaterial({ color: 0x004d26, metalness: 0.3, roughness: 0.4 })
+      );
+      board.position.set(-0.3, 0.24, 0);
+      board.castShadow = true;
+      group.add(board);
+
+      // Disipador de calor CPU en aluminio
+      const cpuHeatsink = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 0.2, 0.55),
+        new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 })
+      );
+      cpuHeatsink.position.set(-0.5, 0.38, 0.15);
+      group.add(cpuHeatsink);
+
+      for (let i = -0.2; i <= 0.2; i += 0.1) {
+        const fin = new THREE.Mesh(
+          new THREE.BoxGeometry(0.04, 0.25, 0.55),
+          new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9 })
+        );
+        fin.position.set(-0.5 + i, 0.4, 0.15);
+        group.add(fin);
+      }
+
+      // Chip RAM
+      const ram = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.08, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.6 })
+      );
+      ram.position.set(0.15, 0.34, 0.2);
+      group.add(ram);
+
+      // Puertos USB metálicos
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+          const port = new THREE.Mesh(
+            new THREE.BoxGeometry(0.38, 0.22, 0.32),
+            new THREE.MeshStandardMaterial({ color: 0x8899a6, metalness: 0.85, roughness: 0.25 })
+          );
+          port.position.set(0.9, 0.35 + j * 0.22, -0.5 + i * 0.45);
+          group.add(port);
+        }
+      }
+
+      // Puerto Ethernet
+      const eth = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 0.28, 0.45),
+        new THREE.MeshStandardMaterial({ color: 0x556677, metalness: 0.8, roughness: 0.3 })
+      );
+      eth.position.set(-1.1, 0.38, -0.55);
+      group.add(eth);
+
+      // Capacitores Cilíndricos
+      for (let i = 0; i < 3; i++) {
+        const cap = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.08, 0.08, 0.22, 12),
+          new THREE.MeshStandardMaterial({ color: 0x2244aa, metalness: 0.7 })
+        );
+        cap.position.set(-0.1 + i * 0.25, 0.35, -0.6);
+        group.add(cap);
+      }
+
+      // Pinera GPIO
+      const gpio = new THREE.Mesh(
+        new THREE.BoxGeometry(1.8, 0.12, 0.22),
+        new THREE.MeshStandardMaterial({ color: 0x111111 })
+      );
+      gpio.position.set(-0.2, 0.34, 0.75);
+      group.add(gpio);
+
+      // LEDs de Estado
+      group.userData.leds = [];
+      const ledG = new THREE.Mesh(
+        new THREE.BoxGeometry(0.09, 0.06, 0.09),
+        new THREE.MeshBasicMaterial({ color: 0x00ff66 })
+      );
+      ledG.position.set(0.95, 0.36, 0.65);
+      group.add(ledG);
+      group.userData.leds.push({ mesh: ledG, base: 0x00ff66, phase: 0 });
+
+      const ledR = new THREE.Mesh(
+        new THREE.BoxGeometry(0.09, 0.06, 0.09),
+        new THREE.MeshBasicMaterial({ color: 0xff2244 })
+      );
+      ledR.position.set(0.95, 0.36, 0.5);
+      group.add(ledR);
+      group.userData.leds.push({ mesh: ledR, base: 0xff2244, phase: 1.5 });
+
+      // Tokens USB
+      const tokenPos = [
+        { x: 1.65, z: -0.35, rot: 0 },
+        { x: 1.65, z: 0.35, rot: 0 }
+      ];
+      tokenPos.forEach((tp, i) => {
+        const token = createUSBToken(i + 1);
+        token.position.set(tp.x, 0.35, tp.z);
+        token.rotation.y = tp.rot;
+        group.add(token);
+      });
+
+      addTechBadge(group, 'Raspberry Pi 4', 'Tokens Físicos Conectados', 0, 2.2, 0);
+
+      group.position.set(8.5, 0, 2.5);
+      scene.add(group);
+
+      group.userData.type = 'raspberry';
+      group.userData.title = 'Servidor IoT — Raspberry Pi';
+      group.userData.desc = 'Raspberry Pi con los tokens USB físicos conectados. Cliente VPN + virtualizador de tokens. Plug & play.';
+    }
+
+    function createUSBToken(num) {
+      const g = new THREE.Group();
+
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.38, 0.16, 0.95),
+        new THREE.MeshStandardMaterial({ color: 0x003366, metalness: 0.5, roughness: 0.2 })
+      );
+      body.position.y = 0.08;
+      g.add(body);
+
+      const clip = new THREE.Mesh(
+        new THREE.BoxGeometry(0.42, 0.18, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.9, roughness: 0.1 })
+      );
+      clip.position.set(0, 0.08, 0.25);
+      g.add(clip);
+
+      const metal = new THREE.Mesh(
+        new THREE.BoxGeometry(0.26, 0.1, 0.3),
+        new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.95, roughness: 0.1 })
+      );
+      metal.position.set(0, 0.08, -0.58);
+      g.add(metal);
+
+      const tled = new THREE.Mesh(
+        new THREE.SphereGeometry(0.04, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x00e5ff })
+      );
+      tled.position.set(0, 0.17, -0.1);
+      g.add(tled);
+
+      const labelDiv = document.createElement('div');
+      labelDiv.innerHTML = `<b>TOKEN 0${num}</b>`;
+      labelDiv.style.cssText = 'background: rgba(0,229,255,0.15); border: 1px solid #00e5ff; color:#00e5ff; font-size:9px; font-weight:bold; padding:2px 5px; border-radius:4px; text-shadow:0 0 4px #00e5ff; pointer-events:none; white-space:nowrap;';
+      const lab = new CSS2DObject(labelDiv);
+      lab.position.set(0, 0.45, 0);
+      g.add(lab);
+
+      g.userData.type = 'token';
+      g.userData.title = 'Token USB físico #' + num;
+      g.userData.desc = 'Token de firma digital físico virtualizado.';
+      return g;
+    }
+
+    function addTechBadge(parent, title, subtitle, x, y, z) {
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <div style="font-weight:700; color:#ffffff; font-size:13px; letter-spacing:0.5px;">${title}</div>
+        <div style="font-size:10px; color:#4db8ff; font-weight:500; margin-top:2px;">${subtitle}</div>
+      `;
+      div.style.cssText = `
+        background: rgba(12, 28, 48, 0.85);
+        border: 1px solid rgba(77, 184, 255, 0.5);
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.25);
+        backdrop-filter: blur(8px);
+        padding: 6px 14px;
+        border-radius: 8px;
+        text-align: center;
+        pointer-events: none;
+        white-space: nowrap;
+      `;
+      const label = new CSS2DObject(div);
+      label.position.set(x, y, z);
+      parent.add(label);
+      return label;
+    }
+
+    function createUserDevice(num, loc) {
+      const group = new THREE.Group();
+
+      const desk = new THREE.Mesh(
+        new THREE.BoxGeometry(1.9, 0.09, 1.15),
+        new THREE.MeshStandardMaterial({ color: 0x1e3048, roughness: 0.55 })
+      );
+      desk.position.y = 0.8;
+      desk.castShadow = true;
+      group.add(desk);
+
+      [[-0.75, -0.45], [0.75, -0.45], [-0.75, 0.45], [0.75, 0.45]].forEach(([x, z]) => {
+        const leg = new THREE.Mesh(
+          new THREE.BoxGeometry(0.08, 0.8, 0.08),
+          new THREE.MeshStandardMaterial({ color: 0x152535 })
+        );
+        leg.position.set(x, 0.4, z);
+        group.add(leg);
+      });
+
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(1.15, 0.045, 0.78),
+        new THREE.MeshStandardMaterial({ color: 0x2c3c50, metalness: 0.5, roughness: 0.3 })
+      );
+      base.position.set(0, 0.88, 0.04);
+      group.add(base);
+
+      const screen = new THREE.Mesh(
+        new THREE.BoxGeometry(1.1, 0.68, 0.035),
+        new THREE.MeshStandardMaterial({
+          color: 0x0c1a28, emissive: 0x0e2840, emissiveIntensity: 0.4
+        })
+      );
+      screen.position.set(0, 1.26, -0.3);
+      screen.rotation.x = -0.16;
+      group.add(screen);
+
+      const osColors = [0x00a4ef, 0xaaaaaa, 0xe53935];
+      osColors.forEach((c, i) => {
+        const sq = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.14, 0.14),
+          new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.75 })
+        );
+        sq.position.set(-0.3 + i * 0.3, 1.3, -0.27);
+        sq.rotation.x = -0.16;
+        group.add(sq);
+      });
+
+      const led = new THREE.Mesh(
+        new THREE.BoxGeometry(0.045, 0.045, 0.025),
+        new THREE.MeshBasicMaterial({ color: 0x22c55e })
+      );
+      led.position.set(0.45, 0.9, 0.4);
+      group.add(led);
+
+      addTechBadge(group, loc.name, loc.country, 0, 1.9, 0);
+
+      group.userData.type = 'user';
+      group.userData.title = 'Usuario — ' + loc.name + ' (' + loc.country + ')';
+      group.userData.desc = 'Operador en ' + loc.name + '. Sistema operativo indistinto (Windows / Mac / Linux). Usa cliente VPN soft + cliente de virtualización de token. Se conecta al servidor cloud y a través de él utiliza el token físico que está en la Raspberry Pi. Puede estar en cualquier país.';
+      group.userData.num = num;
+      group.userData.loc = loc;
+      return group;
+    }
+
+    function createInitialUsers() {
+      for (let i = 0; i < userCount; i++) spawnUser(i);
+    }
+
+    function spawnUser(index) {
+      const loc = LOCATIONS[index % LOCATIONS.length];
+      const jitter = (index % 3 - 1) * 0.8;
+      const device = createUserDevice(index + 1, loc);
+      device.position.set(loc.x + jitter, 0, loc.z + jitter * 0.6);
+      device.rotation.y = Math.atan2(-loc.x, -loc.z) * 0.4 + Math.PI * 0.1;
+      device.scale.setScalar(0.01);
+      scene.add(device);
+      userDevices.push(device);
+
+      const start = performance.now();
+      function grow() {
+        const t = Math.min(1, (performance.now() - start) / 300);
+        const s = t * t * (3 - 2 * t);
+        device.scale.setScalar(s);
+        if (t < 1) requestAnimationFrame(grow);
+      }
+      requestAnimationFrame(grow);
+    }
+
+    function removeLastUser() {
+      if (userDevices.length === 0) return;
+      const device = userDevices.pop();
+      const start = performance.now();
+      function shrink() {
+        const t = Math.min(1, (performance.now() - start) / 240);
+        const s = 1 - t * t * (3 - 2 * t);
+        device.scale.setScalar(Math.max(0.01, s));
+        if (t < 1) requestAnimationFrame(shrink);
+        else {
+          scene.remove(device);
+          device.traverse(c => {
+            if (c.geometry) c.geometry.dispose();
+            if (c.material) {
+              if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+              else c.material.dispose();
+            }
+          });
+        }
+      }
+      requestAnimationFrame(shrink);
+    }
+
+    window.addUser = function() {
+      if (userCount >= MAX_USERS) return;
+      userCount++;
+      spawnUser(userCount - 1);
+      rebuildUserConnections();
+      updateUserUI();
+    };
+
+    window.removeUser = function() {
+      if (userCount <= 1) return;
+      userCount--;
+      removeLastUser();
+      rebuildUserConnections();
+      updateUserUI();
+    };
+
+    function updateUserUI() {
+      document.getElementById('val-users').textContent = userCount + ' / ' + MAX_USERS;
+      document.getElementById('user-count-num').textContent = userCount;
+      document.getElementById('btn-add-user').disabled = userCount >= MAX_USERS;
+      document.getElementById('btn-remove-user').disabled = userCount <= 1;
+    }
+
+    function makeLine(from, to, color) {
+      const points = [];
+      const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
+      mid.y += 1.6 + Math.random() * 1.0;
+      for (let t = 0; t <= 1; t += 0.04) {
+        const p = new THREE.Vector3()
+          .copy(from).multiplyScalar((1-t)*(1-t))
+          .add(mid.clone().multiplyScalar(2*(1-t)*t))
+          .add(to.clone().multiplyScalar(t*t));
+        points.push(p);
+      }
+      const geo = new THREE.BufferGeometry().setFromPoints(points);
+      const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.48 });
+      const line = new THREE.Line(geo, mat);
+      scene.add(line);
+      return { line, points, color };
+    }
+
+    function createFixedConnections() {
+      fixedLines.push(
+        makeLine(
+          new THREE.Vector3(0, 3.3, 0),
+          new THREE.Vector3(8.5, 1.1, 2.5),
+          0x22c55e
+        )
+      );
+    }
+
+    function rebuildUserConnections() {
+      userLines.forEach(c => {
+        scene.remove(c.line);
+        c.line.geometry.dispose();
+        c.line.material.dispose();
+      });
+      userLines.length = 0;
+
+      userDevices.forEach(dev => {
+        const from = new THREE.Vector3(dev.position.x, 1.3, dev.position.z);
+        const to = new THREE.Vector3(0, 3.3, 0);
+        userLines.push(makeLine(from, to, 0x4db8ff));
+      });
+    }
+
+    function createParticles() {
+      const geo = new THREE.SphereGeometry(0.08, 8, 8);
+      for (let i = 0; i < 65; i++) {
+        const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x4db8ff }));
+        mesh.visible = trafficOn;
+        scene.add(mesh);
+        particles.push({
+          mesh, t: Math.random(),
+          speed: 0.17 + Math.random() * 0.22,
+          pathIndex: 0
+        });
+      }
+    }
+
+    function createAmbientDust() {
+      const count = 60;
+      const pos = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        pos[i*3] = (Math.random()-0.5)*50;
+        pos[i*3+1] = Math.random()*13;
+        pos[i*3+2] = (Math.random()-0.5)*50;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+        color: 0x5a9fd4, size: 0.07, transparent: true, opacity: 0.2
+      })));
+    }
+
+    function onPointerMove(e) {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(scene.children, true);
+      let found = null;
+      for (const h of hits) {
+        let o = h.object;
+        while (o && !o.userData?.title) o = o.parent;
+        if (o?.userData?.title) { found = o; break; }
+      }
+      const tip = document.getElementById('tooltip');
+      if (found) {
+        tip.style.display = 'block';
+        tip.style.left = (e.clientX + 14) + 'px';
+        tip.style.top = (e.clientY + 14) + 'px';
+        tip.textContent = found.userData.title;
+        document.body.style.cursor = 'pointer';
+      } else {
+        tip.style.display = 'none';
+        document.body.style.cursor = 'default';
+      }
+    }
+
+    function onPointerDown(e) {
+      if (e.button !== 0) return;
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(scene.children, true);
+      for (const h of hits) {
+        let o = h.object;
+        while (o && !o.userData?.title) o = o.parent;
+        if (o?.userData?.title) {
+          document.getElementById('info-title').textContent = o.userData.title;
+          document.getElementById('info-desc').textContent = o.userData.desc;
+          document.getElementById('info-panel').classList.add('visible');
+          return;
+        }
+      }
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.closeInfo = () => document.getElementById('info-panel').classList.remove('visible');
+
+    window.setMode = (mode) => {
+      document.querySelectorAll('#controls .btn').forEach(b => b.classList.remove('active'));
+      if (mode === 'orbit') {
+        document.getElementById('btn-orbit').classList.add('active');
+        controls.enabled = true;
+        tourActive = false;
+        document.getElementById('btn-tour').classList.remove('active');
+      }
+    };
+
+    window.toggleTraffic = () => {
+      trafficOn = !trafficOn;
+      document.getElementById('btn-traffic').classList.toggle('active', trafficOn);
+      particles.forEach(p => p.mesh.visible = trafficOn);
+    };
+
+    window.startTour = () => {
+      tourActive = !tourActive;
+      document.getElementById('btn-tour').classList.toggle('active', tourActive);
+      controls.enabled = !tourActive;
+      if (tourActive) {
+        document.getElementById('btn-orbit').classList.remove('active');
+        tourAngle = 0;
+      } else {
+        document.getElementById('btn-orbit').classList.add('active');
+      }
+    };
+
+    window.resetView = () => {
+      tourActive = false;
+      controls.enabled = true;
+      document.querySelectorAll('#controls .btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-orbit').classList.add('active');
+      if (trafficOn) document.getElementById('btn-traffic').classList.add('active');
+      camera.position.set(14, 12, 18);
+      controls.target.set(0, 3, 1);
+      controls.update();
+    };
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
+
+      if (tourActive) {
+        tourAngle += delta * 0.3;
+        const radius = 25;
+        camera.position.x = Math.sin(tourAngle) * radius;
+        camera.position.z = Math.cos(tourAngle) * radius;
+        camera.position.y = 12 + Math.sin(tourAngle * 0.5) * 4;
+        camera.lookAt(0, 3, 1);
+      } else {
+        controls.update();
+      }
+
+      if (trafficOn && userLines.length > 0) {
+        const allPaths = [...userLines, ...fixedLines];
+        particles.forEach((p) => {
+          p.t += p.speed * delta;
+          if (p.t > 1) {
+            p.t = 0;
+            p.pathIndex = Math.floor(Math.random() * allPaths.length);
+          }
+          const path = allPaths[p.pathIndex % allPaths.length];
+          if (path && path.points) {
+            const index = Math.floor(p.t * (path.points.length - 1));
+            p.mesh.position.copy(path.points[index]);
+            p.mesh.visible = true;
+          }
+        });
+      }
+
+      if (objects.server?.userData?.leds) {
+        objects.server.userData.leds.forEach(l => {
+          const val = (Math.sin(elapsed * 5 + l.phase) + 1) * 0.5;
+          l.mesh.material.opacity = 0.4 + val * 0.6;
+        });
+      }
+
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+    }
+
+    init();
+  </script>
+</body>
+</html>

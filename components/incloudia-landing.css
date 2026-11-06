@@ -292,6 +292,27 @@ h1 {
 .solution-block .problem { color: #e8eef5; }
 .solution-block .benefit { color: #b8e4ff; }
 
+.demo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(77, 184, 255, 0.1);
+  border: 1px solid rgba(77, 184, 255, 0.3);
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.demo-link:hover {
+  background: rgba(77, 184, 255, 0.18);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
 .clients-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .client-card {
   background: var(--bg-card);
