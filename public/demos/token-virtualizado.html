@@ -266,6 +266,15 @@
         max-height: 32vh;
       }
 
+
+      /* Zoom buttons a bit clearer on mobile */
+      #controls .btn[title="Acercar"],
+      #controls .btn[title="Alejar"] {
+        font-size: 1.05rem;
+        font-weight: 700;
+        min-width: 42px;
+        flex: 0 0 auto;
+      }
       #tooltip {
         max-width: 80vw;
         white-space: normal;
@@ -348,6 +357,8 @@
       <button class="btn active" id="btn-orbit" onclick="setMode('orbit')">Orbitar</button>
       <button class="btn active" id="btn-traffic" onclick="toggleTraffic()">Tráfico</button>
       <button class="btn" id="btn-tour" onclick="startTour()">Tour</button>
+      <button class="btn" type="button" onclick="zoomIn()" title="Acercar">+</button>
+      <button class="btn" type="button" onclick="zoomOut()" title="Alejar">−</button>
       <button class="btn" onclick="resetView()">Reset</button>
     </div>
 
@@ -435,6 +446,15 @@
       controls.maxDistance = 55;
       controls.maxPolarAngle = Math.PI * 0.48;
       controls.target.set(0, 3, 1);
+
+      controls.enableZoom = true;
+      controls.zoomSpeed = 1.1;
+      if (THREE.TOUCH) {
+        controls.touches = {
+          ONE: THREE.TOUCH.ROTATE,
+          TWO: THREE.TOUCH.DOLLY_PAN
+        };
+      }
 
       scene.add(new THREE.AmbientLight(0x6a8aaa, 0.55));
 
@@ -1043,6 +1063,25 @@
       } else {
         document.getElementById('btn-orbit').classList.add('active');
       }
+    };
+
+    
+    window.zoomIn = function () {
+      if (!camera || !controls) return;
+      const dir = new THREE.Vector3().subVectors(camera.position, controls.target);
+      const dist = dir.length();
+      if (dist <= (controls.minDistance || 8) + 0.5) return;
+      camera.position.addScaledVector(dir.normalize(), -Math.max(0.8, dist * 0.12));
+      controls.update();
+    };
+
+    window.zoomOut = function () {
+      if (!camera || !controls) return;
+      const dir = new THREE.Vector3().subVectors(camera.position, controls.target);
+      const dist = dir.length();
+      if (dist >= (controls.maxDistance || 55) - 0.5) return;
+      camera.position.addScaledVector(dir.normalize(), Math.max(0.8, dist * 0.14));
+      controls.update();
     };
 
     window.resetView = () => {
