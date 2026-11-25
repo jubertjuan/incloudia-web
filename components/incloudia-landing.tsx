@@ -23,6 +23,8 @@ import {
   X,
   Box,
 } from 'lucide-react'
+import MascotaNubi from './mascota-nubi'
+import './mascota-nubi.css'
 
 // Reemplazá con tu URL real de Formspree
 const FORMSPREE_URL = 'https://formspree.io/f/xwlllrze'
@@ -510,16 +512,7 @@ export default function IncloudIALanding() {
         </section>
       </main>
 
-      <a
-        href="https://wa.me/5491164157261"
-        className="whatsapp-float"
-        aria-label="WhatsApp"
-        title="Escribinos por WhatsApp"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <MessageCircle />
-      </a>
+      <MascotaNubi />
 
       <footer>
         <div className="container footer-inner">
