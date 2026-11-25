@@ -9,6 +9,9 @@ import {
   Key,
   Bot,
   Shield,
+  Lock,
+  Server,
+  Clock,
   Zap,
   Check,
   ChevronDown,
@@ -37,6 +40,7 @@ const navItems = [
   { id: 'soluciones', label: 'Soluciones' },
   { id: 'clientes', label: 'Clientes' },
   { id: 'servicios', label: 'Servicios' },
+  { id: 'seguridad', label: 'Seguridad' },
   { id: 'valor', label: 'Por qué IncloudIA' },
   { id: 'faq', label: 'FAQ' },
   { id: 'contacto', label: 'Contacto' },
@@ -90,6 +94,7 @@ export default function IncloudIALanding() {
   const solRef = useInView()
   const clientsRef = useInView()
   const servicesRef = useInView()
+  const securityRef = useInView()
   const valueRef = useInView()
   const faqRef = useInView()
   const contactRef = useInView()
@@ -341,6 +346,46 @@ export default function IncloudIALanding() {
                 <h3>Administración IT, Redes y Soporte</h3>
                 <p>Gestión de servidores, Active Directory, VPN, ciberseguridad y mantenimiento preventivo para garantizar la continuidad del negocio.</p>
               </article>
+            </div>
+          </div>
+        </section>
+
+
+        <section id="seguridad" className="section section-dark" ref={securityRef.ref}>
+          <div className={`container reveal ${securityRef.isInView ? 'in-view' : ''}`}>
+            <div className="section-heading centered">
+              <span className="section-index">Seguridad y continuidad</span>
+              <h2>Confianza operativa, no promesas genéricas.</h2>
+              <p style={{ margin: '0 auto' }}>
+                Diseñamos la infraestructura para que tu operación no dependa de un equipo local, un AnyDesk improvisado o un token que viaja de mano en mano.
+              </p>
+            </div>
+            <div className="security-grid">
+              <article className="security-item">
+                <Lock />
+                <h3>Acceso controlado</h3>
+                <p>Usuarios, horarios y permisos centralizados. Entrada desde el navegador, sin instalar software de terceros en cada PC.</p>
+              </article>
+              <article className="security-item">
+                <Server />
+                <h3>Datos fuera del escritorio</h3>
+                <p>La información vive en infraestructura con respaldos. No depende del disco de una notebook ni de una conexión inestable.</p>
+              </article>
+              <article className="security-item">
+                <Key />
+                <h3>Token resguardado</h3>
+                <p>El hardware crítico queda en la oficina. El operador firma por VPN encriptada sin mover el dispositivo físico.</p>
+              </article>
+              <article className="security-item">
+                <Clock />
+                <h3>Operación 24×7</h3>
+                <p>Datacenter con redundancia y monitoreo. La operación no se corta porque se rompió un equipo en casa.</p>
+              </article>
+            </div>
+            <div className="security-cta">
+              <button className="button button-primary" onClick={() => scrollTo('contacto')}>
+                Asesoramiento sin cargo <ArrowRight size={16} />
+              </button>
             </div>
           </div>
         </section>
