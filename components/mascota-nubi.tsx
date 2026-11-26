@@ -12,7 +12,7 @@ type Stage = { id: string; mood: Mood; msg: string; cta?: boolean }
 
 // Un estado de ánimo + mensaje por cada sección de la landing.
 const STAGES: Stage[] = [
-  { id: 'inicio', mood: 'hello', msg: '¡Hola! Soy Nubi. Te acompaño mientras recorrés la web.' },
+  { id: 'inicio', mood: 'hello', msg: '¡Hola! Soy Nubi. Hacéme clic y te muestro un truco.' },
   { id: 'soluciones', mood: 'think', msg: 'Acá contamos qué problemas concretos resolvemos.' },
   { id: 'clientes', mood: 'cheer', msg: 'Casos reales, con clientes reales.' },
   { id: 'servicios', mood: 'ai', msg: 'IA y soporte IT para que tu equipo rinda más.' },
@@ -32,6 +32,19 @@ const ACTS: { name: Act; ms: number }[] = [
   { name: 'look', ms: 2600 },
 ]
 
+// Trucos al hacer clic (como el asistente de Office de antes).
+type Trick = 'glasses' | 'type' | 'magic' | 'music' | 'storm' | 'upload' | 'coffee' | 'tap'
+const TRICKS: { name: Trick; ms: number; msg: string }[] = [
+  { name: 'glasses', ms: 3600, msg: 'Parece que estás buscando una solución cloud. Dejame investigar un cachito…' },
+  { name: 'type', ms: 3600, msg: 'Mientras mirás, yo hago el backup. Listo: cero datos perdidos.' },
+  { name: 'magic', ms: 3600, msg: '¡Abracadabra! Tu escritorio ahora vive en la nube.' },
+  { name: 'music', ms: 3600, msg: 'Escuchando el ritmo del datacenter: 24×7, sin cortes.' },
+  { name: 'storm', ms: 3600, msg: 'Afuera llueve y truena, pero tu operación sigue arriba.' },
+  { name: 'upload', ms: 3200, msg: 'Subiendo tus archivos a la nube… ¡y sin perder ninguno!' },
+  { name: 'coffee', ms: 3200, msg: 'Pausa de café. Tus datos tienen respaldo, vos podés relajarte.' },
+  { name: 'tap', ms: 3200, msg: '¿Hola? ¿Seguís ahí? Toc, toc.' },
+]
+
 const HAPPY: Mood[] = ['cheer', 'bolt', 'chat']
 const RAINBOW = ['#ff6b6b', '#ffd166', '#5ee0a0', '#4db8ff']
 const CONFETTI: [number, string][] = [
@@ -48,9 +61,10 @@ export default function MascotaNubi() {
   const [joy, setJoy] = useState(false)
   const [blink, setBlink] = useState(false)
   const [lean, setLean] = useState<'up' | 'down' | ''>('')
-  const [bubble, setBubble] = useState<{ text: string; cta: boolean } | null>(null)
+  const [bubble, setBubble] = useState<{ text: string; cta: boolean; menu?: boolean } | null>(null)
   const [typed, setTyped] = useState('')
-  const [act, setAct] = useState<Act | null>(null)
+  const [actRaw, setAct] = useState<Act | null>(null)
+  const [trick, setTrick] = useState<Trick | null>(null)
   const [hover, setHover] = useState(false)
   const [dizzy, setDizzy] = useState(false)
   const [wake, setWake] = useState(false)
@@ -63,16 +77,19 @@ export default function MascotaNubi() {
   const clicks = useRef<number[]>([])
   const prevStage = useRef(STAGES[0].id)
   const wasAsleep = useRef(false)
+  const bag = useRef<Trick[]>([])
+  const lastTrick = useRef<Trick | null>(null)
+  const trickTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const closeBubble = useCallback(() => {
     clearTimeout(hideTimer.current)
     setBubble(null)
   }, [])
 
-  const showBubble = useCallback((text: string, cta: boolean, autoHide = true) => {
+  const showBubble = useCallback((text: string, cta: boolean, autoHide = true, menu = false) => {
     clearTimeout(hideTimer.current)
-    setBubble({ text, cta })
-    if (autoHide) hideTimer.current = setTimeout(() => setBubble(null), 7500)
+    setBubble({ text, cta, menu })
+    if (autoHide) hideTimer.current = setTimeout(() => setBubble(null), menu ? 15000 : 7500)
   }, [])
 
   // 1) Detecta qué sección está en el centro de la pantalla.
@@ -256,6 +273,33 @@ export default function MascotaNubi() {
     return () => window.removeEventListener('keydown', onKey)
   }, [closeBubble])
 
+  // Baraja de trucos: salen todos antes de repetir y nunca el mismo seguido.
+  const nextTrick = () => {
+    if (bag.current.length === 0) {
+      const names = TRICKS.map((t) => t.name).sort(() => Math.random() - 0.5)
+      if (names[names.length - 1] === lastTrick.current) names.reverse()
+      bag.current = names
+    }
+    const name = bag.current.pop() as Trick
+    lastTrick.current = name
+    return TRICKS.find((t) => t.name === name) as (typeof TRICKS)[number]
+  }
+
+  const startTrick = () => {
+    const t = nextTrick()
+    clearTimeout(trickTimer.current)
+    setAct(null)
+    setTrick(t.name)
+    showBubble(t.msg, false, true, true)
+    trickTimer.current = setTimeout(() => setTrick(null), t.ms)
+  }
+
+  const scrollToId = (id: string) => {
+    closeBubble()
+    const el = document.getElementById(id)
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' })
+  }
+
   const onClick = () => {
     // 5 clics rápidos: se maréa.
     const now = Date.now()
@@ -263,30 +307,37 @@ export default function MascotaNubi() {
     if (clicks.current.length >= 5) {
       clicks.current = []
       closeBubble()
+      clearTimeout(trickTimer.current)
+      setTrick(null)
       setDizzy(true)
       setTimeout(() => setDizzy(false), 2800)
       return
     }
-    setJoy(true)
-    setTimeout(() => setJoy(false), 1100)
-    if (bubble?.cta) return closeBubble()
-    showBubble('¿Querés hablar con una persona? Escribinos por WhatsApp.', true, false)
+    startTrick()
   }
 
   const mood = stage.mood
+  const act = trick ? null : actRaw
+  const stormy = trick === 'storm'
+  const typing = trick === 'type'
+  const armFill = stormy ? '#9fb0c4' : '#d3ecff'
   const talking = !!bubble && typed.length < bubble.text.length && !asleep
-  const closedEyes = asleep || act === 'sneeze'
+  const closedEyes = asleep || act === 'sneeze' || trick === 'coffee'
   const happy =
     !dizzy && !closedEyes &&
-    (joy || hover || act === 'dance' || act === 'rain' || act === 'rainbow' || HAPPY.includes(mood))
-  const armsUp = happy || act === 'dance'
+    (joy || hover || trick === 'magic' || trick === 'music' || act === 'dance' || act === 'rain' || act === 'rainbow' || HAPPY.includes(mood))
+  const armsUp = happy || act === 'dance' || trick === 'magic' || trick === 'tap'
   const mouth = asleep
     ? 'sleep'
     : dizzy
       ? 'wavy'
       : talking
         ? 'talk'
-        : act === 'sneeze' || joy || hover || act === 'dance' || act === 'rain' || act === 'rainbow' || HAPPY.includes(mood)
+        : stormy
+          ? 'flat'
+          : trick === 'magic' || trick === 'music' || trick === 'tap'
+            ? 'open'
+            : act === 'sneeze' || joy || hover || act === 'dance' || act === 'rain' || act === 'rainbow' || HAPPY.includes(mood)
           ? 'open'
           : mood === 'think'
             ? 'tilt'
@@ -304,6 +355,7 @@ export default function MascotaNubi() {
       data-joy={joy}
       data-lean={lean}
       data-act={act ?? ''}
+      data-trick={trick ?? ''}
       data-dizzy={dizzy}
       data-wake={wake}
     >
@@ -322,6 +374,17 @@ export default function MascotaNubi() {
               <MessageCircle size={16} /> Abrir WhatsApp
             </a>
           )}
+          {bubble.menu && (
+            <>
+              <p className="nubi-ask">¿Querés que te ayude con algo?</p>
+              <ul className="nubi-menu">
+                <li><button type="button" onClick={() => scrollToId('soluciones')}>Ver las soluciones</button></li>
+                <li><button type="button" onClick={() => scrollToId('contacto')}>Pedir asesoramiento sin cargo</button></li>
+                <li><a href={WHATSAPP} target="_blank" rel="noopener noreferrer">Hablar por WhatsApp</a></li>
+                <li><button type="button" onClick={startTrick}>Mostrame otro truco</button></li>
+              </ul>
+            </>
+          )}
         </div>
       )}
 
@@ -332,14 +395,18 @@ export default function MascotaNubi() {
         onClick={onClick}
         onPointerEnter={(e) => e.pointerType !== 'touch' && setHover(true)}
         onPointerLeave={() => setHover(false)}
-        aria-label="Nubi, la mascota de IncloudIA. Abrir opciones de contacto"
-        aria-expanded={!!bubble?.cta}
+        aria-label="Nubi, la mascota de IncloudIA. Hacé clic para ver un truco y opciones de ayuda"
+        aria-expanded={!!bubble?.menu}
       >
         <svg viewBox="0 0 120 100" width="100%" height="100%" aria-hidden="true" focusable="false">
           <defs>
             <linearGradient id="nubi-fill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#ffffff" />
               <stop offset="1" stopColor="#bfe3ff" />
+            </linearGradient>
+            <linearGradient id="nubi-storm" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#8d9db3" />
+              <stop offset="1" stopColor="#4c5b70" />
             </linearGradient>
           </defs>
 
@@ -415,15 +482,15 @@ export default function MascotaNubi() {
             )}
 
             {/* Brazos */}
-            <g className={`arm arm-l ${armsUp ? 'up' : ''} ${act === 'dance' ? 'dance' : ''}`}>
-              <ellipse cx="12" cy="68" rx="9" ry="6" fill="#d3ecff" />
+            <g className={`arm arm-l ${armsUp ? 'up' : ''} ${act === 'dance' ? 'dance' : ''} ${typing ? 'typing' : ''}`}>
+              <ellipse cx="12" cy="68" rx="9" ry="6" fill={armFill} />
             </g>
-            <g className={`arm arm-r ${armsUp ? 'up' : ''} ${act === 'dance' ? 'dance' : ''} ${mood === 'hello' && !asleep && !armsUp ? 'wave' : ''}`}>
-              <ellipse cx="108" cy="68" rx="9" ry="6" fill="#d3ecff" />
+            <g className={`arm arm-r ${armsUp ? 'up' : ''} ${act === 'dance' ? 'dance' : ''} ${mood === 'hello' && !asleep && !armsUp ? 'wave' : ''} ${typing ? 'typing' : ''} ${trick === 'tap' ? 'knock' : ''}`}>
+              <ellipse cx="108" cy="68" rx="9" ry="6" fill={armFill} />
             </g>
 
             {/* Cuerpo de nube */}
-            <g fill="url(#nubi-fill)">
+            <g fill={stormy ? 'url(#nubi-storm)' : 'url(#nubi-fill)'}>
               <circle cx="38" cy="58" r="20" />
               <circle cx="62" cy="40" r="26" />
               <circle cx="86" cy="56" r="20" />
@@ -470,7 +537,7 @@ export default function MascotaNubi() {
               </g>
             </g>
 
-            {mood === 'shield' && !closedEyes && !dizzy && (
+            {(mood === 'shield' || stormy) && !closedEyes && !dizzy && (
               <g stroke="#071426" strokeWidth="2.6" strokeLinecap="round">
                 <line x1="39" y1="46" x2="52" y2="49" />
                 <line x1="81" y1="46" x2="68" y2="49" />
@@ -507,7 +574,7 @@ export default function MascotaNubi() {
               </g>
             )}
 
-            {act === 'rain' && (
+            {(act === 'rain' || stormy) && (
               <g fill="#4db8ff">
                 {[30, 42, 54, 66, 78, 90].map((x, i) => (
                   <ellipse key={x} className="drop" cx={x} cy="86" rx="1.8" ry="3.2" style={{ animationDelay: `${(i % 3) * 0.22 + i * 0.05}s` }} />
@@ -541,6 +608,103 @@ export default function MascotaNubi() {
                 <text x="40" y="14">★</text>
                 <text x="62" y="4">★</text>
                 <text x="84" y="14">★</text>
+              </g>
+            )}
+            {trick === 'glasses' && (
+              <g>
+                <g className="prop">
+                  <circle cx="46" cy="58" r="9.5" fill="rgba(255,255,255,.18)" stroke="#071426" strokeWidth="2.2" />
+                  <circle cx="74" cy="58" r="9.5" fill="rgba(255,255,255,.18)" stroke="#071426" strokeWidth="2.2" />
+                  <line x1="55.5" y1="57" x2="64.5" y2="57" stroke="#071426" strokeWidth="2.2" />
+                </g>
+                <g transform="translate(100 38)">
+                  <g className="lupa">
+                    <circle r="8" fill="rgba(77,184,255,.25)" stroke="#f2f6fa" strokeWidth="2.5" />
+                    <line x1="6" y1="6" x2="15" y2="15" stroke="#f2f6fa" strokeWidth="3.5" strokeLinecap="round" />
+                  </g>
+                </g>
+              </g>
+            )}
+            {trick === 'type' && (
+              <g className="prop">
+                <rect x="38" y="76" width="44" height="15" rx="3" fill="#0e1f38" stroke="#4db8ff" strokeWidth="1.6" />
+                <rect className="codeln" x="42" y="79" width="22" height="2" rx="1" fill="#4db8ff" />
+                <rect className="codeln c2" x="42" y="83" width="30" height="2" rx="1" fill="#5ee0a0" />
+                <rect className="codeln c3" x="42" y="87" width="16" height="2" rx="1" fill="#ffd166" />
+                <rect x="32" y="91" width="56" height="4" rx="2" fill="#bfe3ff" />
+              </g>
+            )}
+            {trick === 'magic' && (
+              <g>
+                <g className="prop">
+                  <path d="M42 22 L62 -24 L82 22 Z" fill="#2a3f66" stroke="#4db8ff" strokeWidth="2" strokeLinejoin="round" />
+                  <ellipse cx="62" cy="22" rx="26" ry="5.5" fill="#2a3f66" stroke="#4db8ff" strokeWidth="2" />
+                  <text x="62" y="9" fontSize="11" fill="#ffd166" textAnchor="middle">★</text>
+                </g>
+                <g className="wand">
+                  <line x1="108" y1="64" x2="120" y2="40" stroke="#f2f6fa" strokeWidth="2.6" strokeLinecap="round" />
+                  <circle cx="120" cy="40" r="2.6" fill="#ffd166" />
+                </g>
+                <g fill="#ffd166" fontSize="10" textAnchor="middle">
+                  <text className="twinkle" x="124" y="30">✦</text>
+                  <text className="twinkle t2" x="112" y="32" style={{ animationDelay: '0.2s' }}>✦</text>
+                  <text className="twinkle" x="118" y="22" style={{ animationDelay: '0.8s' }}>✦</text>
+                </g>
+              </g>
+            )}
+            {trick === 'music' && (
+              <g>
+                <g className="prop">
+                  <path d="M32 50 Q61 -28 90 50" fill="none" stroke="#4db8ff" strokeWidth="4" strokeLinecap="round" />
+                  <rect x="26" y="46" width="11" height="19" rx="5" fill="#4db8ff" stroke="#0e1f38" strokeWidth="2" />
+                  <rect x="83" y="46" width="11" height="19" rx="5" fill="#4db8ff" stroke="#0e1f38" strokeWidth="2" />
+                </g>
+                <g fill="#4db8ff" fontFamily="system-ui, sans-serif" fontWeight="700">
+                  <text className="note" x="4" y="30" fontSize="16">♪</text>
+                  <text className="note n2" x="100" y="26" fontSize="18">♫</text>
+                  <text className="note n3" x="56" y="-6" fontSize="14">♪</text>
+                </g>
+              </g>
+            )}
+            {stormy && (
+              <path className="bolt-flash" d="M62 84 L52 96 H60 L54 108 L73 91 H64 L70 84 Z" fill="#ffd166" />
+            )}
+            {trick === 'upload' && (
+              <g>
+                <rect x="26" y="-16" width="68" height="7" rx="3.5" fill="#0e1f38" stroke="#4db8ff" strokeWidth="1.4" />
+                <rect className="pbar" x="28" y="-14.4" width="64" height="3.8" rx="1.9" fill="#4db8ff" />
+                <g className="upfile">
+                  <rect x="54" y="98" width="12" height="15" rx="2" fill="#f2f6fa" />
+                  <path d="M60 110 v-7 M56.5 106 l3.5 -3.5 l3.5 3.5" fill="none" stroke="#0e1f38" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </g>
+                <g transform="translate(-22 0)">
+                  <g className="upfile u2">
+                    <rect x="54" y="98" width="12" height="15" rx="2" fill="#f2f6fa" />
+                    <path d="M60 110 v-7 M56.5 106 l3.5 -3.5 l3.5 3.5" fill="none" stroke="#0e1f38" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </g>
+                </g>
+              </g>
+            )}
+            {trick === 'coffee' && (
+              <g>
+                <g fill="none" stroke="#4db8ff" strokeWidth="2" strokeLinecap="round">
+                  <path className="steam" d="M92 64 q-3 -3 0 -6 q3 -3 0 -6" />
+                  <path className="steam s2" d="M98 64 q-3 -3 0 -6 q3 -3 0 -6" />
+                </g>
+                <g className="cup">
+                  <path d="M88 68 h16 v8 a8 8 0 0 1 -16 0 z" fill="#4db8ff" stroke="#0e1f38" strokeWidth="1.8" strokeLinejoin="round" />
+                  <path d="M104 70 a4.5 4.5 0 0 1 0 9" fill="none" stroke="#0e1f38" strokeWidth="2" strokeLinecap="round" />
+                </g>
+              </g>
+            )}
+            {trick === 'tap' && (
+              <g>
+                <text className="knock-txt" x="98" y="40" fontSize="11" fontWeight="800" fill="#f2f6fa" fontFamily="system-ui, sans-serif">toc toc</text>
+                <g stroke="#ffd166" strokeWidth="2" strokeLinecap="round">
+                  <line className="impact" x1="121" y1="52" x2="127" y2="48" />
+                  <line className="impact i2" x1="123" y1="60" x2="130" y2="60" />
+                  <line className="impact" x1="121" y1="68" x2="127" y2="72" />
+                </g>
               </g>
             )}
             {wake && (

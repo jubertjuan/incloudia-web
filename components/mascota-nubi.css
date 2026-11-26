@@ -184,11 +184,84 @@
 @keyframes nubi-rot { to { transform: rotate(360deg); } }
 @keyframes nubi-zzz { 0% { opacity: 0; transform: translate(0, 6px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -10px); } }
 
+/* ---------- Trucos (clic) ---------- */
+.nubi[data-trick='type'] .nubi-body { animation: nubi-typebob 0.28s ease-in-out infinite; }
+.nubi[data-trick='music'] .nubi-body { animation: nubi-bobhead 0.55s ease-in-out infinite; }
+.nubi[data-trick='magic'] .nubi-body { animation: nubi-hop 0.5s ease-out; }
+.nubi[data-trick='storm'] .nubi-body { animation: nubi-shake 0.14s linear infinite; }
+.nubi[data-trick='coffee'] .nubi-body { animation: nubi-sipbody 2.2s ease-in-out; }
+.nubi[data-trick='tap'] .nubi-body { animation: nubi-tapbody 0.6s ease-out forwards; }
+.nubi[data-trick='glasses'] .eyes-in { animation: nubi-look 1.4s ease-in-out infinite; }
+.nubi[data-trick='type'] .eyes-in { transform: translateY(3px); }
+.nubi[data-trick='upload'] .eyes-in { transform: translateY(-3px); }
+
+.arm-l.typing { animation: nubi-typeL 0.16s ease-in-out infinite alternate; }
+.arm-r.typing { animation: nubi-typeR 0.16s ease-in-out 0.08s infinite alternate; }
+.arm-r.knock { animation: nubi-knock 0.28s ease-in-out infinite alternate; }
+
+.lupa { animation: nubi-scan 1.5s ease-in-out infinite alternate; }
+.codeln { transform-box: fill-box; transform-origin: left center; animation: nubi-code 0.9s steps(6, end) infinite; }
+.codeln.c2 { animation-delay: 0.3s; }
+.codeln.c3 { animation-delay: 0.6s; }
+.wand { transform-origin: 108px 64px; animation: nubi-wand 0.6s ease-in-out infinite alternate; }
+.bolt-flash { opacity: 0; animation: nubi-flash 0.9s linear infinite; }
+.upfile { opacity: 0; animation: nubi-upfile 1.2s ease-in infinite; }
+.upfile.u2 { animation-delay: 0.6s; }
+.pbar { transform-box: fill-box; transform-origin: left center; animation: nubi-bar 2.8s ease-in-out forwards; }
+.cup { animation: nubi-sip 2.4s ease-in-out; }
+.steam { opacity: 0; animation: nubi-rise 1.4s ease-out infinite; }
+.steam.s2 { animation-delay: 0.5s; }
+.knock-txt { transform-box: fill-box; transform-origin: center; animation: nubi-pop 0.3s both, nubi-bob 0.35s ease-in-out 0.3s infinite; }
+.impact { animation: nubi-light 0.2s steps(2, jump-none) infinite; }
+.impact.i2 { animation-delay: 0.1s; }
+
+@keyframes nubi-typebob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px) scale(1.01, 0.99); } }
+@keyframes nubi-bobhead { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(5deg) translateY(2px); } }
+@keyframes nubi-shake { 0% { transform: translate(0, 0); } 25% { transform: translate(-1.4px, 0.6px); } 50% { transform: translate(1.4px, -0.6px); } 75% { transform: translate(-1px, -0.6px); } 100% { transform: translate(0, 0); } }
+@keyframes nubi-sipbody { 0%, 100% { transform: rotate(0); } 30%, 70% { transform: rotate(-5deg); } }
+@keyframes nubi-tapbody { to { transform: scale(1.12) translateY(-4px); } }
+@keyframes nubi-scan { from { transform: translate(0, 0); } to { transform: translate(-56px, 14px); } }
+@keyframes nubi-code { from { transform: scaleX(0.1); } to { transform: scaleX(1); } }
+@keyframes nubi-wand { from { transform: rotate(-18deg); } to { transform: rotate(8deg); } }
+@keyframes nubi-flash { 0%, 100% { opacity: 0; } 40% { opacity: 1; } 55% { opacity: 0; } 70% { opacity: 1; } 85% { opacity: 0; } }
+@keyframes nubi-upfile { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-34px); } }
+@keyframes nubi-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes nubi-sip { 0%, 100% { transform: translate(0, 0); } 30%, 65% { transform: translate(-22px, -3px); } }
+@keyframes nubi-typeL { from { transform: rotate(-14deg); } to { transform: rotate(16deg); } }
+@keyframes nubi-typeR { from { transform: rotate(14deg); } to { transform: rotate(-16deg); } }
+@keyframes nubi-knock { from { transform: rotate(-78deg); } to { transform: rotate(-44deg); } }
+
+/* ---------- Menú de ayuda dentro del globo ---------- */
+.nubi-bubble:has(.nubi-menu) { max-width: 280px; }
+.nubi-bubble .nubi-ask { margin: 10px 0 4px; font-weight: 600; color: #bfe3ff; }
+.nubi-menu { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.nubi-menu button,
+.nubi-menu a {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 6px 8px;
+  border: 0; border-radius: 8px;
+  background: transparent; color: #f2f6fa;
+  font: inherit; font-size: 13px; text-align: left; text-decoration: none;
+  cursor: pointer;
+}
+.nubi-menu button::before,
+.nubi-menu a::before {
+  content: ''; flex: none; width: 10px; height: 10px;
+  border-radius: 50%; border: 2px solid #4db8ff;
+}
+.nubi-menu button:hover,
+.nubi-menu a:hover { background: rgba(77, 184, 255, 0.14); }
+.nubi-menu button:hover::before,
+.nubi-menu a:hover::before { background: #4db8ff; }
+.nubi-menu button:focus-visible,
+.nubi-menu a:focus-visible { outline: 2px solid #4db8ff; outline-offset: 1px; }
+
 /* ---------- Mobile ---------- */
 @media (max-width: 560px) {
   .nubi { right: 12px; bottom: 12px; }
   .nubi-btn { width: 68px; height: 57px; }
   .nubi-bubble { max-width: min(220px, calc(100vw - 110px)); font-size: 13px; }
+  .nubi-bubble:has(.nubi-menu) { max-width: min(250px, calc(100vw - 100px)); }
 }
 
 /* ---------- Respeta "reducir movimiento" ---------- */
@@ -197,5 +270,6 @@
   .nubi[data-lean] .nubi-body { transform: none; }
   .rb { stroke-dashoffset: 0; }
   .bulb { opacity: 1; }
-  .confetti, .bit, .note, .heart, .drop { opacity: 0; }
+  .confetti, .bit, .note, .heart, .drop, .steam, .upfile, .bolt-flash { opacity: 0; }
+  .pbar { transform: none; }
 }
